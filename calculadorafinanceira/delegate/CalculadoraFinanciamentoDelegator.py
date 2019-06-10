@@ -21,4 +21,8 @@ class CalculadoraFinanciamentoDelegator:
         elif not re.match(FormatoInputCalculadoraFinanciamento.FORMATO_NUMERO_DE_PARCELAS.value, num_parcelas):
             self.calculadoraFinanciamentoView.valorInvalidoLineEditNumeroDeParcelas()
         else:
-            return self.calculadoraFinanciamento.calcula_financiamento(valor_bem=valor_bem, taxa_juros=taxa_juros, num_parcelas=num_parcelas, sistema_financiamento=sistema_financiamento)
+            return self.calculadoraFinanciamento.calcula_financiamento(
+                float(valor_bem.replace(".", "").replace(",", ".")),
+                int(taxa_juros),
+                int(num_parcelas),
+                sistema_financiamento)

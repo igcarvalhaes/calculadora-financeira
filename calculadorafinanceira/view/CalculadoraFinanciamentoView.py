@@ -105,6 +105,7 @@ class Ui_MainWindow(object):
         self.lineEditValorDoBem.clear()
         self.lineEditTaxaDeJuros.clear()
         self.lineEditNumeroDeParcelas.clear()
+        self.valoresValidosInput()
         # TODO: resetar a tabela
 
     def valorInvalidoLineEditValorDoBem(self):
