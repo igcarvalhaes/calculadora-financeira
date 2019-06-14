@@ -11,7 +11,7 @@ class CalculadoraFinanciamentoDelegator:
         self.calculadoraFinanciamentoView = Ui_MainWindow
         self.calculadoraFinanciamento = CalculadoraFinanciamento()
 
-    def calcula_financiamento(self, valor_bem, taxa_juros, num_parcelas, sistema_financiamento):
+    def calcula_financiamento(self, valor_bem, taxa_juros, num_parcelas, sistemasFinanciamento):
         self.calculadoraFinanciamentoView.valoresValidosInput()        
 
         if not re.match(FormatoInputCalculadoraFinanciamento.FORMATO_VALOR_DO_BEM.value, valor_bem):
@@ -20,9 +20,12 @@ class CalculadoraFinanciamentoDelegator:
             self.calculadoraFinanciamentoView.valorInvalidoLineEditTaxaDeJuros()
         elif not re.match(FormatoInputCalculadoraFinanciamento.FORMATO_NUMERO_DE_PARCELAS.value, num_parcelas):
             self.calculadoraFinanciamentoView.valorInvalidoLineEditNumeroDeParcelas()
+        elif len(sistemasFinanciamento) == 0:
+            self.calculadoraFinanciamentoView.sistemaDeFinanciamentoNaoEscolhido()
         else:
             return self.calculadoraFinanciamento.calcula_financiamento(
                 float(valor_bem.replace(".", "").replace(",", ".")),
                 int(taxa_juros),
                 int(num_parcelas),
-                sistema_financiamento)
+                sistemasFinanciamento
+                )

@@ -12,6 +12,7 @@ class AppWindow(QMainWindow):
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     w = AppWindow()
+    w.setWindowTitle("Calculadora de Financiamento")
     w.show()
     sys.exit(app.exec_())
     del w.window
