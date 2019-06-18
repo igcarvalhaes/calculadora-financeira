@@ -23,9 +23,13 @@ class CalculadoraFinanciamentoDelegator:
         elif len(sistemasFinanciamento) == 0:
             self.calculadoraFinanciamentoView.sistemaDeFinanciamentoNaoEscolhido()
         else:
-            return self.calculadoraFinanciamento.calcula_financiamento(
+            resultadoCalculo = self.calculadoraFinanciamento.calcula_financiamento(
                 float(valor_bem.replace(".", "").replace(",", ".")),
                 int(taxa_juros),
                 int(num_parcelas),
                 sistemasFinanciamento
                 )
+            
+            self.calculadoraFinanciamentoView.limparGroupBoxResultado()
+            self.calculadoraFinanciamentoView.renderizarTabelaResultado(resultadoCalculo)
+            self.calculadoraFinanciamentoView.renderizarGraficoResultado()

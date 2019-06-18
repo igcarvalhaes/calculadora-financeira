@@ -173,12 +173,25 @@
      </property>
     </widget>
    </widget>
-   <widget class="QGroupBox" name="groupBoxResultado">
+   <widget class="QGroupBox" name="groupBoxResultado1">
     <property name="geometry">
      <rect>
       <x>0</x>
       <y>100</y>
-      <width>800</width>
+      <width>400</width>
+      <height>500</height>
+     </rect>
+    </property>
+    <property name="title">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QGroupBox" name="groupBoxResultado2">
+    <property name="geometry">
+     <rect>
+      <x>400</x>
+      <y>100</y>
+      <width>400</width>
       <height>500</height>
      </rect>
     </property>

@@ -11,10 +11,18 @@ from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QAbstra
 from calculadorafinanceira.delegate.CalculadoraFinanciamentoDelegator import CalculadoraFinanciamentoDelegator
 from calculadorafinanceira.model.SistemaFinanciamento import SistemaFinanciamento
 from calculadorafinanceira.model.CalculadoraFinanciamentoTableModel import CalculadoraFinanciamentoTableModel
+from calculadorafinanceira.view.CalculadoraFinanciamentoTableView import CalculadoraFinanciamentoTableView
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+import matplotlib.pyplot as plt
+
+import random
+import sys
 
 class Ui_MainWindow(object):
 
-    estiloLineEditInvalido = "border-style: solid; border-width: 2px 2px 2px 2px; border-color: red;"
+    estiloInputInvalido = "border-style: solid; border-width: 2px 2px 2px 2px; border-color: red;"
     cabecalhosTabelaResultado = ["Parcela", "Valor da Prestação", "Amortização", "Juros", "Saldo Devedor"]
 
     def __init__(self):
@@ -32,14 +40,15 @@ class Ui_MainWindow(object):
         self.groupBoxInput.setObjectName("groupBoxInput")
         self.gridLayout = QtWidgets.QGridLayout(self.groupBoxInput)
         self.gridLayout.setObjectName("gridLayout")
-        self.labelValorDoBem = QtWidgets.QLabel(self.groupBoxInput)
-        self.labelValorDoBem.setAlignment(QtCore.Qt.AlignCenter)
-        self.labelValorDoBem.setObjectName("labelValorDoBem")
-        self.gridLayout.addWidget(self.labelValorDoBem, 0, 0, 1, 1)
-        self.labelTaxaDeJuros = QtWidgets.QLabel(self.groupBoxInput)
-        self.labelTaxaDeJuros.setAlignment(QtCore.Qt.AlignCenter)
-        self.labelTaxaDeJuros.setObjectName("labelTaxaDeJuros")
-        self.gridLayout.addWidget(self.labelTaxaDeJuros, 0, 1, 1, 1)
+        self.lineEditNumeroDeParcelas = QtWidgets.QLineEdit(self.groupBoxInput)
+        self.lineEditNumeroDeParcelas.setObjectName("lineEditNumeroDeParcelas")
+        self.gridLayout.addWidget(self.lineEditNumeroDeParcelas, 1, 2, 1, 1)
+        self.lineEditTaxaDeJuros = QtWidgets.QLineEdit(self.groupBoxInput)
+        self.lineEditTaxaDeJuros.setObjectName("lineEditTaxaDeJuros")
+        self.gridLayout.addWidget(self.lineEditTaxaDeJuros, 1, 1, 1, 1)
+        self.pushButtonResetar = QtWidgets.QPushButton(self.groupBoxInput)
+        self.pushButtonResetar.setObjectName("pushButtonResetar")
+        self.gridLayout.addWidget(self.pushButtonResetar, 1, 5, 1, 1)
         self.labelNumeroDeParcelas = QtWidgets.QLabel(self.groupBoxInput)
         self.labelNumeroDeParcelas.setAlignment(QtCore.Qt.AlignCenter)
         self.labelNumeroDeParcelas.setObjectName("labelNumeroDeParcelas")
@@ -48,40 +57,38 @@ class Ui_MainWindow(object):
         self.labelSistemaDeFinanciamento.setAlignment(QtCore.Qt.AlignCenter)
         self.labelSistemaDeFinanciamento.setObjectName("labelSistemaDeFinanciamento")
         self.gridLayout.addWidget(self.labelSistemaDeFinanciamento, 0, 3, 1, 2)
-        self.pushButtonSimular = QtWidgets.QPushButton(self.groupBoxInput)
-        self.pushButtonSimular.setObjectName("pushButtonSimular")
-        self.gridLayout.addWidget(self.pushButtonSimular, 0, 5, 1, 1)
-        self.lineEditValorDoBem = QtWidgets.QLineEdit(self.groupBoxInput)
-        self.lineEditValorDoBem.setObjectName("lineEditValorDoBem")
-        self.lineEditValorDoBem.setText("1.000,00")
-        self.gridLayout.addWidget(self.lineEditValorDoBem, 1, 0, 1, 1)
-        self.lineEditTaxaDeJuros = QtWidgets.QLineEdit(self.groupBoxInput)
-        self.lineEditTaxaDeJuros.setObjectName("lineEditTaxaDeJuros")
-        self.lineEditTaxaDeJuros.setText("1")
-        self.gridLayout.addWidget(self.lineEditTaxaDeJuros, 1, 1, 1, 1)
-        self.lineEditNumeroDeParcelas = QtWidgets.QLineEdit(self.groupBoxInput)
-        self.lineEditNumeroDeParcelas.setObjectName("lineEditNumeroDeParcelas")
-        self.lineEditNumeroDeParcelas.setText("12")
-        self.gridLayout.addWidget(self.lineEditNumeroDeParcelas, 1, 2, 1, 1)
-        self.checkBoxSac = QtWidgets.QCheckBox(self.groupBoxInput)
-        self.checkBoxSac.setObjectName("checkBoxSac")
-        self.gridLayout.addWidget(self.checkBoxSac, 1, 3, 1, 1)
         self.checkBoxPrice = QtWidgets.QCheckBox(self.groupBoxInput)
         self.checkBoxPrice.setObjectName("checkBoxPrice")
         self.gridLayout.addWidget(self.checkBoxPrice, 1, 4, 1, 1)
-        self.pushButtonResetar = QtWidgets.QPushButton(self.groupBoxInput)
-        self.pushButtonResetar.setObjectName("pushButtonResetar")
-        self.gridLayout.addWidget(self.pushButtonResetar, 1, 5, 1, 1)
+        self.lineEditValorDoBem = QtWidgets.QLineEdit(self.groupBoxInput)
+        self.lineEditValorDoBem.setObjectName("lineEditValorDoBem")
+        self.gridLayout.addWidget(self.lineEditValorDoBem, 1, 0, 1, 1)
+        self.checkBoxSac = QtWidgets.QCheckBox(self.groupBoxInput)
+        self.checkBoxSac.setObjectName("checkBoxSac")
+        self.gridLayout.addWidget(self.checkBoxSac, 1, 3, 1, 1)
+        self.labelTaxaDeJuros = QtWidgets.QLabel(self.groupBoxInput)
+        self.labelTaxaDeJuros.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelTaxaDeJuros.setObjectName("labelTaxaDeJuros")
+        self.gridLayout.addWidget(self.labelTaxaDeJuros, 0, 1, 1, 1)
+        self.pushButtonSimular = QtWidgets.QPushButton(self.groupBoxInput)
+        self.pushButtonSimular.setObjectName("pushButtonSimular")
+        self.gridLayout.addWidget(self.pushButtonSimular, 0, 5, 1, 1)
+        self.labelValorDoBem = QtWidgets.QLabel(self.groupBoxInput)
+        self.labelValorDoBem.setAlignment(QtCore.Qt.AlignCenter)
+        self.labelValorDoBem.setObjectName("labelValorDoBem")
+        self.gridLayout.addWidget(self.labelValorDoBem, 0, 0, 1, 1)
         self.verticalLayout.addWidget(self.groupBoxInput)
-        self.groupBoxResultado = QtWidgets.QGroupBox(self.centralwidget)
-        self.groupBoxResultado.setTitle("")
-        self.groupBoxResultado.setObjectName("groupBoxResultado")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.groupBoxResultado)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.tableViewResultado = QtWidgets.QTableView(self.groupBoxResultado)
-        self.tableViewResultado.setObjectName("tableViewResultado")
-        self.verticalLayout_2.addWidget(self.tableViewResultado)
-        self.verticalLayout.addWidget(self.groupBoxResultado)
+        self.groupBoxesResultado = QtWidgets.QGroupBox(self.centralwidget)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.groupBoxesResultado.sizePolicy().hasHeightForWidth())
+        self.groupBoxesResultado.setSizePolicy(sizePolicy)
+        self.groupBoxesResultado.setTitle("")
+        self.groupBoxesResultado.setObjectName("groupBoxesResultado")
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.groupBoxesResultado)
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        self.verticalLayout.addWidget(self.groupBoxesResultado)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 23))
@@ -111,6 +118,9 @@ class Ui_MainWindow(object):
     def continueUiSetup(self):
         self.pushButtonSimular.clicked.connect(self.onClickPushButtonSimular)
         self.pushButtonResetar.clicked.connect(self.onClickPushButtonResetar)
+        self.lineEditValorDoBem.setText("1.000,00")
+        self.lineEditTaxaDeJuros.setText("1")
+        self.lineEditNumeroDeParcelas.setText("12")
 
     def onClickPushButtonSimular(self):
         sistemasFinanciamento = []
@@ -119,51 +129,37 @@ class Ui_MainWindow(object):
         if self.checkBoxPrice.isChecked():
             sistemasFinanciamento.append(SistemaFinanciamento.PRICE)
 
-        resultadoCalculo = self.calculadoraFinanciamentoDelegator.calcula_financiamento(
+        self.calculadoraFinanciamentoDelegator.calcula_financiamento(
             self.lineEditValorDoBem.text(), 
             self.lineEditTaxaDeJuros.text(), 
             self.lineEditNumeroDeParcelas.text(), 
             sistemasFinanciamento
             )
 
-        self.renderizarTabela(resultadoCalculo)
-
     def onClickPushButtonResetar(self):
         self.lineEditValorDoBem.clear()
         self.lineEditTaxaDeJuros.clear()
         self.lineEditNumeroDeParcelas.clear()
         self.valoresValidosInput()
+        self.limparGroupBoxResultado()
+
+    def limparGroupBoxResultado(self):
+        for i in reversed(range(self.horizontalLayout_2.count())):
+            self.horizontalLayout_2.takeAt(i).widget().deleteLater()
 
     def valorInvalidoLineEditValorDoBem(self):
-        self.lineEditValorDoBem.setStyleSheet(
-            "#" + self.lineEditValorDoBem.objectName() + "{" + 
-            self.estiloLineEditInvalido + 
-            "}")
+        self.lineEditValorDoBem.setStyleSheet(self.estiloInputInvalido)
 
     def valorInvalidoLineEditTaxaDeJuros(self):
-        self.lineEditTaxaDeJuros.setStyleSheet(
-            "#" + self.lineEditTaxaDeJuros.objectName() + "{" + 
-            self.estiloLineEditInvalido + 
-            "}")
+        self.lineEditTaxaDeJuros.setStyleSheet(self.estiloInputInvalido)
 
     def valorInvalidoLineEditNumeroDeParcelas(self):
-        self.lineEditNumeroDeParcelas.setStyleSheet(
-            "#" + self.lineEditNumeroDeParcelas.objectName() + "{" + 
-            self.estiloLineEditInvalido + 
-            "}")
+        self.lineEditNumeroDeParcelas.setStyleSheet(self.estiloInputInvalido)
 
     def sistemaDeFinanciamentoNaoEscolhido(self):
-        self.checkBoxSac.setStyleSheet(
-            "#" + self.checkBoxSac.objectName() + "{" +
-            self.estiloLineEditInvalido +
-            "}")
-        
-        self.checkBoxPrice.setStyleSheet(
-            "#" + self.checkBoxPrice.objectName() + "{" +
-            self.estiloLineEditInvalido +
-            "}")
+        self.checkBoxSac.setStyleSheet(self.estiloInputInvalido)
+        self.checkBoxPrice.setStyleSheet(self.estiloInputInvalido)
 
-    # Remove a borda vermelha dos campos de input
     def valoresValidosInput(self):
         self.lineEditValorDoBem.setStyleSheet("")
         self.lineEditTaxaDeJuros.setStyleSheet("")
@@ -171,7 +167,7 @@ class Ui_MainWindow(object):
         self.checkBoxSac.setStyleSheet("")
         self.checkBoxPrice.setStyleSheet("")
 
-    def renderizarTabela(self, resultadoCalculo):
+    def renderizarTabelaResultado(self, resultadoCalculo):
         if (resultadoCalculo.getResultadoSac() is None):
             self.renderizarSistemaCalculoUnico(resultadoCalculo.getResultadoPrice())
         elif (resultadoCalculo.getResultadoPrice() is None):
@@ -180,15 +176,131 @@ class Ui_MainWindow(object):
             self.renderizarSistemaCalculoMultiplo(resultadoCalculo)
 
     def renderizarSistemaCalculoUnico(self, linhas):
-        self.tableModel = CalculadoraFinanciamentoTableModel(linhas, self.cabecalhosTabelaResultado)
-        self.tableViewResultado.setModel(self.tableModel)
-        self.tableViewResultado.resizeColumnsToContents()
-        self.tableViewResultado.setSpan(len(linhas) - 1, 1, 1, 4)
+        self.tableViewResultado1 = CalculadoraFinanciamentoTableView(self.groupBoxesResultado)
+        self.tableViewResultado1.setObjectName("tableViewResultado1")
+        self.horizontalLayout_2.addWidget(self.tableViewResultado1)
+
+        self.renderizarTabela(self.tableViewResultado1, linhas)
 
     def renderizarSistemaCalculoMultiplo(self, resultadoCalculo):
-        linhas = [x + y for x, y in zip(resultadoCalculo.getResultadoSac(), resultadoCalculo.getResultadoPrice())]
-        self.tableModel = CalculadoraFinanciamentoTableModel(linhas, self.cabecalhosTabelaResultado * 2)
-        self.tableViewResultado.setModel(self.tableModel)
-        self.tableViewResultado.resizeColumnsToContents()
-        self.tableViewResultado.setSpan(len(linhas) - 1, 1, 1, 4)
-        self.tableViewResultado.setSpan(len(linhas) - 1, 6, 1, 4)
+        self.renderizarSistemaCalculoUnico(resultadoCalculo.getResultadoSac())
+
+        self.tableViewResultado2 = CalculadoraFinanciamentoTableView(self.groupBoxesResultado)
+        self.tableViewResultado2.setObjectName("tableViewResultado2")
+        self.horizontalLayout_2.addWidget(self.tableViewResultado2)
+
+        self.renderizarTabela(self.tableViewResultado2, resultadoCalculo.getResultadoPrice())
+
+    def renderizarTabela(self, tableView, linhas):
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(tableView.sizePolicy().hasHeightForWidth())
+        tableView.setSizePolicy(sizePolicy)
+        
+        tableModel = CalculadoraFinanciamentoTableModel(linhas, self.cabecalhosTabelaResultado)
+        tableView.setModel(tableModel)
+        
+        tableView.setSpan(len(linhas) - 1, 1, 1, 4)
+
+        horizontalHeader = tableView.horizontalHeader()
+        verticalHeader = tableView.verticalHeader()
+
+        horizontalHeader.setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeToContents)
+        for i in range(1, 5):
+            horizontalHeader.setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
+
+        for i in range(0, len(linhas)):
+            verticalHeader.setSectionResizeMode(i, QtWidgets.QHeaderView.Stretch)
+
+        tableView.show()
+
+    def renderizarGraficoResultado(self):
+        # a figure instance to plot on
+        self.figure = plt.figure()
+
+        # this is the Canvas Widget that displays the `figure`
+        # it takes the `figure` instance as a parameter to __init__
+        self.canvas = FigureCanvas(self.figure)
+
+        # this is the Navigation widget
+        # it takes the Canvas widget and a parent
+        self.toolbar = NavigationToolbar(self.canvas, self.groupBoxesResultado)
+
+        # random data
+        data = [random.random() for i in range(10)]
+
+        # instead of ax.hold(False)
+        self.figure.clear()
+
+        # create an axis
+        ax = self.figure.add_subplot(111)
+
+        # discards the old graph
+        # ax.hold(False) # deprecated, see above
+
+        # plot data
+        ax.plot(data, '*-')
+
+        self.horizontalLayout_2.addWidget(self.canvas)
+
+        # refresh canvas
+        self.canvas.draw()
+
+    def renderizarGraficoResultado3(self, grafico):
+        self.janelaGraficos = QtWidgets.QMainWindow()
+        self.janelaGraficos.resize(800, 600)
+        self.janelaGraficos.setWindowTitle("Gráficos da Simulação de Financiamento")
+        self.centralwidgetGraficos = QtWidgets.QWidget(self.janelaGraficos)
+        self.centralwidgetGraficos.setObjectName("centralwidgetGraficos")
+        self.gridLayoutGraficos = QtWidgets.QGridLayout(self.centralwidgetGraficos)
+        self.gridLayoutGraficos.setObjectName("gridLayoutGraficos")
+        self.gridLayoutGraficos.addWidget(grafico.canvas, 1, 1, 1, 1)
+        self.pushButtonResetar2 = QtWidgets.QPushButton(self.centralwidgetGraficos)
+        self.pushButtonResetar2.setObjectName("pushButtonResetar")
+        self.gridLayout.addWidget(self.pushButtonResetar, 2, 2, 1, 1)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(grafico.canvas.sizePolicy().hasHeightForWidth())
+        grafico.canvas.setSizePolicy(sizePolicy)
+        self.janelaGraficos.show()
+
+    def renderizarGraficoResultado2(self, grafico):
+        MainWindow = QtWidgets.QMainWindow()
+        MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(800, 600)
+        self.centralwidget2 = QtWidgets.QWidget(MainWindow)
+        self.centralwidget2.setObjectName("centralwidget2")
+        self.groupBox = QtWidgets.QGroupBox(self.centralwidget2)
+        self.groupBox.setGeometry(QtCore.QRect(0, 0, 800, 600))
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.groupBox.sizePolicy().hasHeightForWidth())
+        self.groupBox.setSizePolicy(sizePolicy)
+        self.groupBox.setObjectName("groupBox")
+        self.gridLayout = QtWidgets.QGridLayout(self.groupBox)
+        self.gridLayout.setObjectName("gridLayout")
+        self.groupBox_2 = QtWidgets.QGroupBox(self.groupBox)
+        self.groupBox_2.setObjectName("groupBox_2")
+        self.gridLayout.addWidget(self.groupBox_2, 0, 0, 1, 1)
+        self.groupBox_4 = QtWidgets.QGroupBox(self.groupBox)
+        self.groupBox_4.setObjectName("groupBox_4")
+        self.gridLayout.addWidget(self.groupBox_4, 1, 0, 1, 1)
+        self.groupBox_5 = QtWidgets.QGroupBox(self.groupBox)
+        self.groupBox_5.setObjectName("groupBox_5")
+        self.gridLayout.addWidget(self.groupBox_5, 1, 2, 1, 1)
+        self.groupBox_3 = QtWidgets.QGroupBox(self.groupBox)
+        self.groupBox_3.setObjectName("groupBox_3")
+        self.gridLayout.addWidget(self.groupBox_3, 0, 2, 1, 1)
+        MainWindow.setCentralWidget(self.centralwidget2)
+        self.menubar = QtWidgets.QMenuBar(MainWindow)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 23))
+        self.menubar.setObjectName("menubar")
+        MainWindow.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(MainWindow)
+        self.statusbar.setObjectName("statusbar")
+        MainWindow.setStatusBar(self.statusbar)
+
+        MainWindow.show()

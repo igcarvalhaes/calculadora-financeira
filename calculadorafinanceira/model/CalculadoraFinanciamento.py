@@ -29,7 +29,7 @@ class CalculadoraFinanciamento:
             valor_bem = valor_bem - amortizacao
             linhas.append([i, round(valor_parcelas, 2), round(amortizacao, 2), round(juros, 2), round(valor_bem, 2)])
 
-        linhas[len(linhas) - 1][4] = "-"
+        linhas[len(linhas) - 1][4] = 0
         linhas.append(["Total dos Pagamentos", sum([x[1] for x in linhas[1:]]), "", "", ""])
         return linhas
 
@@ -43,6 +43,6 @@ class CalculadoraFinanciamento:
             valor_bem -= amortizacao
             linhas.append([i, round(prestacao, 2), round(amortizacao, 2), round(juros, 2), round(valor_bem, 2)])
         
-        linhas[len(linhas) - 1][4] = "-"
+        linhas[len(linhas) - 1][4] = 0
         linhas.append(["Total dos Pagamentos", sum([x[1] for x in linhas[1:]]), "", "", ""])
         return linhas
