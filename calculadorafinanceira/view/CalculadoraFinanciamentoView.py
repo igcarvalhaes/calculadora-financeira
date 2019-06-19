@@ -6,16 +6,17 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import QtCore, QtGui, QtWidgets, Qt
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QAbstractItemView
 from calculadorafinanceira.delegate.CalculadoraFinanciamentoDelegator import CalculadoraFinanciamentoDelegator
 from calculadorafinanceira.model.SistemaFinanciamento import SistemaFinanciamento
 from calculadorafinanceira.model.CalculadoraFinanciamentoTableModel import CalculadoraFinanciamentoTableModel
 from calculadorafinanceira.view.CalculadoraFinanciamentoTableView import CalculadoraFinanciamentoTableView
 
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
+import numpy as np
 
 import random
 import sys
@@ -42,9 +43,11 @@ class Ui_MainWindow(object):
         self.gridLayout.setObjectName("gridLayout")
         self.lineEditNumeroDeParcelas = QtWidgets.QLineEdit(self.groupBoxInput)
         self.lineEditNumeroDeParcelas.setObjectName("lineEditNumeroDeParcelas")
+        self.lineEditNumeroDeParcelas.setAlignment(Qt.Qt.AlignCenter)
         self.gridLayout.addWidget(self.lineEditNumeroDeParcelas, 1, 2, 1, 1)
         self.lineEditTaxaDeJuros = QtWidgets.QLineEdit(self.groupBoxInput)
         self.lineEditTaxaDeJuros.setObjectName("lineEditTaxaDeJuros")
+        self.lineEditTaxaDeJuros.setAlignment(Qt.Qt.AlignCenter)
         self.gridLayout.addWidget(self.lineEditTaxaDeJuros, 1, 1, 1, 1)
         self.pushButtonResetar = QtWidgets.QPushButton(self.groupBoxInput)
         self.pushButtonResetar.setObjectName("pushButtonResetar")
@@ -62,6 +65,7 @@ class Ui_MainWindow(object):
         self.gridLayout.addWidget(self.checkBoxPrice, 1, 4, 1, 1)
         self.lineEditValorDoBem = QtWidgets.QLineEdit(self.groupBoxInput)
         self.lineEditValorDoBem.setObjectName("lineEditValorDoBem")
+        self.lineEditValorDoBem.setAlignment(Qt.Qt.AlignCenter)
         self.gridLayout.addWidget(self.lineEditValorDoBem, 1, 0, 1, 1)
         self.checkBoxSac = QtWidgets.QCheckBox(self.groupBoxInput)
         self.checkBoxSac.setObjectName("checkBoxSac")
@@ -118,9 +122,9 @@ class Ui_MainWindow(object):
     def continueUiSetup(self):
         self.pushButtonSimular.clicked.connect(self.onClickPushButtonSimular)
         self.pushButtonResetar.clicked.connect(self.onClickPushButtonResetar)
-        self.lineEditValorDoBem.setText("1.000,00")
+        self.lineEditValorDoBem.setText("300.000,00")
         self.lineEditTaxaDeJuros.setText("1")
-        self.lineEditNumeroDeParcelas.setText("12")
+        self.lineEditNumeroDeParcelas.setText("360")
 
     def onClickPushButtonSimular(self):
         sistemasFinanciamento = []
@@ -140,6 +144,8 @@ class Ui_MainWindow(object):
         self.lineEditValorDoBem.clear()
         self.lineEditTaxaDeJuros.clear()
         self.lineEditNumeroDeParcelas.clear()
+        self.checkBoxSac.setChecked(False)
+        self.checkBoxPrice.setChecked(False)
         self.valoresValidosInput()
         self.limparGroupBoxResultado()
 
@@ -215,37 +221,55 @@ class Ui_MainWindow(object):
 
         tableView.show()
 
-    def renderizarGraficoResultado(self):
+    def renderizarGraficoResultado(self, resultadoCalculo):
+        if (resultadoCalculo.getResultadoSac() is None):
+            self.renderizarGraficosSistemaCalculoUnico(resultadoCalculo.getResultadoPrice())
+        elif (resultadoCalculo.getResultadoPrice() is None):
+            self.renderizarGraficosSistemaCalculoUnico(resultadoCalculo.getResultadoSac())
+        else:
+            self.renderizarGraficosSistemaCalculoMultiplo(resultadoCalculo)
+
+    def renderizarGraficosSistemaCalculoUnico(self, resultadoCalculo):
         # a figure instance to plot on
         self.figure = plt.figure()
 
         # this is the Canvas Widget that displays the `figure`
         # it takes the `figure` instance as a parameter to __init__
         self.canvas = FigureCanvas(self.figure)
+        
+        parcelas = [x[0] for x in resultadoCalculo[1:-1]]
+        amortizacao = [x[2] for x in resultadoCalculo[1:-1]]
+        juros = [x[3] for x in resultadoCalculo[1:-1]]
+        prestacao = [x[1] for x in resultadoCalculo[1:-1]]
 
-        # this is the Navigation widget
-        # it takes the Canvas widget and a parent
-        self.toolbar = NavigationToolbar(self.canvas, self.groupBoxesResultado)
+        plt.subplot(211)
 
-        # random data
-        data = [random.random() for i in range(10)]
+        amortizacaoPlot = plt.plot(parcelas, amortizacao, label="Amortização")
+        plt.setp(amortizacaoPlot, color="r")
+        
+        jurosPlot = plt.plot(parcelas, juros, label="Juros")
+        plt.setp(jurosPlot, color="g")
+        
+        prestacaoPlot = plt.plot(parcelas, prestacao, label="Prestação")
+        plt.setp(prestacaoPlot, color="b")
+        
+        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+           ncol=3, mode="expand", borderaxespad=0.)
 
-        # instead of ax.hold(False)
-        self.figure.clear()
+        plt.subplot(212)
 
-        # create an axis
-        ax = self.figure.add_subplot(111)
+        objects = ["Sac"]
+        y_pos = np.arange(len(objects))
+        jurosTotal = sum(x[3] for x in resultadoCalculo[1:-1])
 
-        # discards the old graph
-        # ax.hold(False) # deprecated, see above
-
-        # plot data
-        ax.plot(data, '*-')
+        plt.barh(y_pos, jurosTotal, align="center", alpha=0.5)
+        plt.yticks(y_pos, objects)
+        plt.xlabel("Juros Pago")
 
         self.horizontalLayout_2.addWidget(self.canvas)
 
         # refresh canvas
-        self.canvas.draw()
+        self.canvas.show()
 
     def renderizarGraficoResultado3(self, grafico):
         self.janelaGraficos = QtWidgets.QMainWindow()

@@ -32,4 +32,4 @@ class CalculadoraFinanciamentoDelegator:
             
             self.calculadoraFinanciamentoView.limparGroupBoxResultado()
             self.calculadoraFinanciamentoView.renderizarTabelaResultado(resultadoCalculo)
-            self.calculadoraFinanciamentoView.renderizarGraficoResultado()
+            self.calculadoraFinanciamentoView.renderizarGraficoResultado(resultadoCalculo)
