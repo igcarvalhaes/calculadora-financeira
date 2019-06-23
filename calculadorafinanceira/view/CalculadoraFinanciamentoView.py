@@ -7,7 +7,7 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QAbstractItemView
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QAbstractItemView, QMainWindow
 from calculadorafinanceira.delegate.CalculadoraFinanciamentoDelegator import CalculadoraFinanciamentoDelegator
 from calculadorafinanceira.model.SistemaFinanciamento import SistemaFinanciamento
 from calculadorafinanceira.model.CalculadoraFinanciamentoTableModel import CalculadoraFinanciamentoTableModel
@@ -271,6 +271,57 @@ class Ui_MainWindow(object):
         # refresh canvas
         self.canvas.show()
 
+    def renderizarGraficosSistemaCalculoMultiplo(self, resultadoCalculo):
+        # a figure instance to plot on
+        self.figure = plt.figure()
+
+        # this is the Canvas Widget that displays the `figure`
+        # it takes the `figure` instance as a parameter to __init__
+        self.canvas = FigureCanvas(self.figure)
+        
+        parcelas = [x[0] for x in resultadoCalculo.getResultadoSac()[1:-1]]
+        amortizacao = [x[2] for x in resultadoCalculo.getResultadoSac()[1:-1]]
+        juros = [x[3] for x in resultadoCalculo.getResultadoSac()[1:-1]]
+        prestacao = [x[1] for x in resultadoCalculo.getResultadoSac()[1:-1]]
+
+        plt.subplot(211)
+
+        amortizacaoPlot = plt.plot(parcelas, amortizacao, label="Amortização")
+        plt.setp(amortizacaoPlot, color="r")
+        
+        jurosPlot = plt.plot(parcelas, juros, label="Juros")
+        plt.setp(jurosPlot, color="g")
+        
+        prestacaoPlot = plt.plot(parcelas, prestacao, label="Prestação")
+        plt.setp(prestacaoPlot, color="b")
+        
+        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+           ncol=3, mode="expand", borderaxespad=0.)
+
+        plt.subplot(212)
+
+        objects = ["Sac"]
+        y_pos = np.arange(len(objects))
+        jurosTotal = sum(x[3] for x in resultadoCalculo.getResultadoSac()[1:-1])
+
+        plt.barh(y_pos, jurosTotal, align="center", alpha=0.5)
+        plt.yticks(y_pos, objects)
+        plt.xlabel("Juros Pago")
+
+        self.janelaGraficos = MyMainWindow()
+        self.janelaGraficos.resize(800, 600)
+        self.janelaGraficos.setWindowTitle("Gráficos da Simulação de Financiamento")
+        #self.centralwidgetGraficos = QtWidgets.QWidget(self.janelaGraficos)
+        #self.centralwidgetGraficos.setObjectName("centralwidgetGraficos")
+        #self.centralwidgetGraficos.setStyleSheet(self.estiloInputInvalido)
+
+        self.horizontalLayoutGraficos = QtWidgets.QVBoxLayout(self.janelaGraficos)
+        self.horizontalLayoutGraficos.setObjectName("horizontalLayoutGraficos")
+        self.horizontalLayoutGraficos.addWidget(self.canvas)
+
+        self.janelaGraficos.show()
+        self.canvas.show()
+
     def renderizarGraficoResultado3(self, grafico):
         self.janelaGraficos = QtWidgets.QMainWindow()
         self.janelaGraficos.resize(800, 600)
@@ -328,3 +379,8 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         MainWindow.show()
+
+    class MyMainWindow(QMainWindow):
+        def __init__(self):
+            super().__init__()
+            self.show()
