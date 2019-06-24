@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QTableView
 
 class CalculadoraFinanciamentoTableView(QTableView):
 
-    nomeWidget = None
+    estaAtualizando = False
     instances = []
 
     def __init__(self, parent):
@@ -11,11 +11,11 @@ class CalculadoraFinanciamentoTableView(QTableView):
         self.instances.append(self)
 
     def wheelEvent(self, QWheelEvent):
-        if self.nomeWidget is None:
-            self.nomeWidget = self.objectName()
+        if not self.estaAtualizando:
+            self.estaAtualizando = True
             for instance in self.instances:
                 super(QTableView, instance).wheelEvent(QWheelEvent)
-            self.nomeWidget = None
+            self.estaAtualizando = False
 
     def deleteLater(self):
         self.instances.remove(self)

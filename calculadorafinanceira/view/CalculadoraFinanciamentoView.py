@@ -7,19 +7,20 @@
 # WARNING! All changes made in this file will be lost!
 
 from PyQt5 import QtCore, QtGui, QtWidgets, Qt
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QAbstractItemView, QMainWindow
-from calculadorafinanceira.delegate.CalculadoraFinanciamentoDelegator import CalculadoraFinanciamentoDelegator
-from calculadorafinanceira.model.SistemaFinanciamento import SistemaFinanciamento
-from calculadorafinanceira.model.CalculadoraFinanciamentoTableModel import CalculadoraFinanciamentoTableModel
-from calculadorafinanceira.view.CalculadoraFinanciamentoTableView import CalculadoraFinanciamentoTableView
-
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QVBoxLayout, QAbstractItemView, QMainWindow, QDialog
 from matplotlib.backends.backend_qt5agg import FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 import matplotlib.pyplot as plt
 import numpy as np
 
 import random
+import locale
 import sys
+
+from calculadorafinanceira.delegate.CalculadoraFinanciamentoDelegator import CalculadoraFinanciamentoDelegator
+from calculadorafinanceira.model.SistemaFinanciamento import SistemaFinanciamento
+from calculadorafinanceira.model.CalculadoraFinanciamentoTableModel import CalculadoraFinanciamentoTableModel
+from calculadorafinanceira.view.CalculadoraFinanciamentoTableView import CalculadoraFinanciamentoTableView
 
 class Ui_MainWindow(object):
 
@@ -28,6 +29,7 @@ class Ui_MainWindow(object):
 
     def __init__(self):
         self.calculadoraFinanciamentoDelegator = CalculadoraFinanciamentoDelegator(self)
+        locale.setlocale(locale.LC_ALL, 'pt_BR.UTF-8')
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -110,8 +112,8 @@ class Ui_MainWindow(object):
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.labelValorDoBem.setText(_translate("MainWindow", "Valor do bem"))
-        self.labelTaxaDeJuros.setText(_translate("MainWindow", "Taxa de Juros"))
+        self.labelValorDoBem.setText(_translate("MainWindow", "Valor do bem (R$)"))
+        self.labelTaxaDeJuros.setText(_translate("MainWindow", "Taxa de Juros (% a.m.)"))
         self.labelNumeroDeParcelas.setText(_translate("MainWindow", "Numero de Parcelas"))
         self.labelSistemaDeFinanciamento.setText(_translate("MainWindow", "Sistema de Financiamento"))
         self.pushButtonSimular.setText(_translate("MainWindow", "Simular"))
@@ -122,9 +124,6 @@ class Ui_MainWindow(object):
     def continueUiSetup(self):
         self.pushButtonSimular.clicked.connect(self.onClickPushButtonSimular)
         self.pushButtonResetar.clicked.connect(self.onClickPushButtonResetar)
-        self.lineEditValorDoBem.setText("300.000,00")
-        self.lineEditTaxaDeJuros.setText("1")
-        self.lineEditNumeroDeParcelas.setText("360")
 
     def onClickPushButtonSimular(self):
         sistemasFinanciamento = []
@@ -230,11 +229,8 @@ class Ui_MainWindow(object):
             self.renderizarGraficosSistemaCalculoMultiplo(resultadoCalculo)
 
     def renderizarGraficosSistemaCalculoUnico(self, resultadoCalculo):
-        # a figure instance to plot on
         self.figure = plt.figure()
 
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
         self.canvas = FigureCanvas(self.figure)
         
         parcelas = [x[0] for x in resultadoCalculo[1:-1]]
@@ -268,119 +264,60 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_2.addWidget(self.canvas)
 
-        # refresh canvas
         self.canvas.show()
 
     def renderizarGraficosSistemaCalculoMultiplo(self, resultadoCalculo):
-        # a figure instance to plot on
-        self.figure = plt.figure()
+        fig, axs = plt.subplots(2, 2, figsize=(20,10))
 
-        # this is the Canvas Widget that displays the `figure`
-        # it takes the `figure` instance as a parameter to __init__
-        self.canvas = FigureCanvas(self.figure)
-        
-        parcelas = [x[0] for x in resultadoCalculo.getResultadoSac()[1:-1]]
-        amortizacao = [x[2] for x in resultadoCalculo.getResultadoSac()[1:-1]]
-        juros = [x[3] for x in resultadoCalculo.getResultadoSac()[1:-1]]
-        prestacao = [x[1] for x in resultadoCalculo.getResultadoSac()[1:-1]]
+        self.canvas = FigureCanvas(fig)
 
-        plt.subplot(211)
+        parcelasSac = [x[0] for x in resultadoCalculo.getResultadoSac()[1:-1]]
+        amortizacaoSac = [x[2] for x in resultadoCalculo.getResultadoSac()[1:-1]]
+        jurosSac = [x[3] for x in resultadoCalculo.getResultadoSac()[1:-1]]
+        prestacaoSac = [x[1] for x in resultadoCalculo.getResultadoSac()[1:-1]]
 
-        amortizacaoPlot = plt.plot(parcelas, amortizacao, label="Amortização")
-        plt.setp(amortizacaoPlot, color="r")
+        amortizacaoPlot = axs[0, 0].plot(parcelasSac, amortizacaoSac, label="Amortização")
         
-        jurosPlot = plt.plot(parcelas, juros, label="Juros")
-        plt.setp(jurosPlot, color="g")
+        jurosPlot = axs[0, 0].plot(parcelasSac, jurosSac, label="Juros")
         
-        prestacaoPlot = plt.plot(parcelas, prestacao, label="Prestação")
-        plt.setp(prestacaoPlot, color="b")
-        
-        plt.legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+        prestacaoPlot = axs[0, 0].plot(parcelasSac, prestacaoSac, label="Prestação")
+
+        axs[0, 0].legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
            ncol=3, mode="expand", borderaxespad=0.)
+        
+        parcelasPrice = [x[0] for x in resultadoCalculo.getResultadoPrice()[1:-1]]
+        amortizacaoPrice = [x[2] for x in resultadoCalculo.getResultadoPrice()[1:-1]]
+        jurosPrice = [x[3] for x in resultadoCalculo.getResultadoPrice()[1:-1]]
+        prestacaoPrice = [x[1] for x in resultadoCalculo.getResultadoPrice()[1:-1]]
 
-        plt.subplot(212)
-
-        objects = ["Sac"]
+        amortizacaoPlot = axs[0, 1].plot(parcelasPrice, amortizacaoPrice, label="Amortização")
+        
+        jurosPlot = axs[0, 1].plot(parcelasPrice, jurosPrice, label="Juros")
+        
+        prestacaoPlot = axs[0, 1].plot(parcelasPrice, prestacaoPrice, label="Prestação")
+        
+        axs[0, 1].legend(bbox_to_anchor=(0., 1.02, 1., .102), loc=3,
+           ncol=3, mode="expand", borderaxespad=0.)
+        
+        objects = ["Sac", "Price"]
         y_pos = np.arange(len(objects))
-        jurosTotal = sum(x[3] for x in resultadoCalculo.getResultadoSac()[1:-1])
+        jurosTotalSac = sum(x[3] for x in resultadoCalculo.getResultadoSac()[1:-1])
+        jurosTotalPrice = sum(x[3] for x in resultadoCalculo.getResultadoPrice()[1:-1])
 
-        plt.barh(y_pos, jurosTotal, align="center", alpha=0.5)
-        plt.yticks(y_pos, objects)
-        plt.xlabel("Juros Pago")
+        axs[1, 0].barh(y_pos, [jurosTotalSac, jurosTotalPrice], align="center", alpha=0.5)
+        axs[1, 0].set_yticks(y_pos)
+        axs[1, 0].set_yticklabels(objects)
+        axs[1, 0].set_xlabel("Juros Pago")
 
-        self.janelaGraficos = MyMainWindow()
-        self.janelaGraficos.resize(800, 600)
-        self.janelaGraficos.setWindowTitle("Gráficos da Simulação de Financiamento")
-        #self.centralwidgetGraficos = QtWidgets.QWidget(self.janelaGraficos)
-        #self.centralwidgetGraficos.setObjectName("centralwidgetGraficos")
-        #self.centralwidgetGraficos.setStyleSheet(self.estiloInputInvalido)
+        axs[1, 1].plot(prestacaoSac, label="Sac")
+        axs[1, 1].plot(prestacaoPrice, label="Price")
+        axs[1, 1].set_xlabel("Evolução das parcelas")
+        axs[1, 1].legend(loc='upper right', ncol=2, borderaxespad=0.)
 
-        self.horizontalLayoutGraficos = QtWidgets.QVBoxLayout(self.janelaGraficos)
-        self.horizontalLayoutGraficos.setObjectName("horizontalLayoutGraficos")
-        self.horizontalLayoutGraficos.addWidget(self.canvas)
-
+        self.janelaGraficos = QtWidgets.QWidget()
+        self.janelaGraficos.setWindowTitle("Graficos do resultado da simulação")
+        self.janelaGraficos.resize(1000, 600)
+        layout = QVBoxLayout()
+        layout.addWidget(self.canvas)
+        self.janelaGraficos.setLayout(layout)
         self.janelaGraficos.show()
-        self.canvas.show()
-
-    def renderizarGraficoResultado3(self, grafico):
-        self.janelaGraficos = QtWidgets.QMainWindow()
-        self.janelaGraficos.resize(800, 600)
-        self.janelaGraficos.setWindowTitle("Gráficos da Simulação de Financiamento")
-        self.centralwidgetGraficos = QtWidgets.QWidget(self.janelaGraficos)
-        self.centralwidgetGraficos.setObjectName("centralwidgetGraficos")
-        self.gridLayoutGraficos = QtWidgets.QGridLayout(self.centralwidgetGraficos)
-        self.gridLayoutGraficos.setObjectName("gridLayoutGraficos")
-        self.gridLayoutGraficos.addWidget(grafico.canvas, 1, 1, 1, 1)
-        self.pushButtonResetar2 = QtWidgets.QPushButton(self.centralwidgetGraficos)
-        self.pushButtonResetar2.setObjectName("pushButtonResetar")
-        self.gridLayout.addWidget(self.pushButtonResetar, 2, 2, 1, 1)
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(grafico.canvas.sizePolicy().hasHeightForWidth())
-        grafico.canvas.setSizePolicy(sizePolicy)
-        self.janelaGraficos.show()
-
-    def renderizarGraficoResultado2(self, grafico):
-        MainWindow = QtWidgets.QMainWindow()
-        MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(800, 600)
-        self.centralwidget2 = QtWidgets.QWidget(MainWindow)
-        self.centralwidget2.setObjectName("centralwidget2")
-        self.groupBox = QtWidgets.QGroupBox(self.centralwidget2)
-        self.groupBox.setGeometry(QtCore.QRect(0, 0, 800, 600))
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Preferred, QtWidgets.QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.groupBox.sizePolicy().hasHeightForWidth())
-        self.groupBox.setSizePolicy(sizePolicy)
-        self.groupBox.setObjectName("groupBox")
-        self.gridLayout = QtWidgets.QGridLayout(self.groupBox)
-        self.gridLayout.setObjectName("gridLayout")
-        self.groupBox_2 = QtWidgets.QGroupBox(self.groupBox)
-        self.groupBox_2.setObjectName("groupBox_2")
-        self.gridLayout.addWidget(self.groupBox_2, 0, 0, 1, 1)
-        self.groupBox_4 = QtWidgets.QGroupBox(self.groupBox)
-        self.groupBox_4.setObjectName("groupBox_4")
-        self.gridLayout.addWidget(self.groupBox_4, 1, 0, 1, 1)
-        self.groupBox_5 = QtWidgets.QGroupBox(self.groupBox)
-        self.groupBox_5.setObjectName("groupBox_5")
-        self.gridLayout.addWidget(self.groupBox_5, 1, 2, 1, 1)
-        self.groupBox_3 = QtWidgets.QGroupBox(self.groupBox)
-        self.groupBox_3.setObjectName("groupBox_3")
-        self.gridLayout.addWidget(self.groupBox_3, 0, 2, 1, 1)
-        MainWindow.setCentralWidget(self.centralwidget2)
-        self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 800, 23))
-        self.menubar.setObjectName("menubar")
-        MainWindow.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(MainWindow)
-        self.statusbar.setObjectName("statusbar")
-        MainWindow.setStatusBar(self.statusbar)
-
-        MainWindow.show()
-
-    class MyMainWindow(QMainWindow):
-        def __init__(self):
-            super().__init__()
-            self.show()

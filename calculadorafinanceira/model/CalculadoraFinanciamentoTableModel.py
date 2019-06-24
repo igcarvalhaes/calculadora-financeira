@@ -27,7 +27,7 @@ class CalculadoraFinanciamentoTableModel(QAbstractTableModel):
         dado = self.linhas[index.row()][index.column()]
         if index.column() == 0:
             return (QVariant(dado))
-        elif type(dado) is not str:
+        elif type(dado) is float:
             return QVariant(locale.currency(dado, grouping=True))
         
     def headerData(self, col, orientation, role):
